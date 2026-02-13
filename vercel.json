@@ -1,0 +1,27 @@
+{
+  "builds": [
+    {
+      "src": "backend/starauto/wsgi.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb",
+        "runtime": "python3.9"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/starauto/wsgi.py"
+    },
+    {
+      "src": "/admin/(.*)",
+      "dest": "backend/starauto/wsgi.py"
+    }
+  ],
+  "env": {
+    "DJANGO_SECRET_KEY": "@django-secret-key",
+    "DEBUG": "False",
+    "PYTHONPATH": "$PYTHONPATH:backend/starauto"
+  }
+}
