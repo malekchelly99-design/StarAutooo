@@ -1,10 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, useSearchParams } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { messageAPI, carAPI } from '@/services/api';
 
 export default function ContactPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Chargement...</div>}>
+      <ContactContent />
+    </Suspense>
+  );
+}
+
+function ContactContent() {
   const searchParams = useSearchParams();
   const carId = searchParams.get('car');
   

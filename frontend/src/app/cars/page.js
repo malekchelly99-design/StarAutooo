@@ -1,12 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { carAPI, favoriteAPI } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import CarCard from '@/components/CarCard';
 
 export default function CarsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Chargement...</div>}>
+      <CarsContent />
+    </Suspense>
+  );
+}
+
+function CarsContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const [cars, setCars] = useState([]);
