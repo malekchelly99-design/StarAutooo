@@ -1,20 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
-const Car = require('../models/Car');
+const { createModel } = require('../database');
 const { protect } = require('../middleware/auth');
+
+// Use JSON DB for now
+const User = createModel('users');
+const Car = createModel('cars');
 
 // @route   GET /api/favorites
 // @desc    Get user's favorite cars
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate('favorites');
+    const user = await User.findById(req.user.id);
+    
+    // Get favorite cars
+    const favorites = [];
+    for (const favId of user.favorites) {
+      const car = await Car.findById(favId);
+      if (car) favorites.push(car);
+    }
     
     res.status(200).json({
       success: true,
-      count: user.favorites.length,
-      favorites: user.favorites
+      count: favorites.length,
+      favorites
     });
   } catch (error) {
     res.status(500).json({
@@ -49,7 +59,7 @@ router.post('/:carId', protect, async (req, res) => {
     }
     
     user.favorites.push(req.params.carId);
-    await user.save();
+    await User.findByIdAndUpdate(req.user.id, { favorites: user.favorites });
     
     res.status(200).json({
       success: true,
@@ -80,7 +90,7 @@ router.delete('/:carId', protect, async (req, res) => {
     }
     
     user.favorites = user.favorites.filter(fav => fav.toString() !== req.params.carId);
-    await user.save();
+    await User.findByIdAndUpdate(req.user.id, { favorites: user.favorites });
     
     res.status(200).json({
       success: true,

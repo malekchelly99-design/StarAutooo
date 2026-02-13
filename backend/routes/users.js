@@ -1,14 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
+const { createModel } = require('../database');
 const { protect, authorize } = require('../middleware/auth');
+
+// Use JSON DB for now
+const User = createModel('users');
 
 // @route   GET /api/users/count
 // @desc    Get total client count (non-admin)
 // @access  Private (ADMIN only)
 router.get('/count', protect, authorize('ADMIN'), async (req, res) => {
   try {
-    const count = await User.countDocuments({ role: 'USER' });
+    const users = await User.find({ role: 'USER' });
+    const count = users.length;
     
     res.status(200).json({
       success: true,

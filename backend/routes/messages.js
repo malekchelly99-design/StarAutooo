@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const Message = require('../models/Message');
+const { createModel } = require('../database');
 const { protect, authorize } = require('../middleware/auth');
+
+// Use JSON DB for now
+const Message = createModel('messages');
 
 // @route   GET /api/messages
 // @desc    Get all messages with count
@@ -9,7 +12,7 @@ const { protect, authorize } = require('../middleware/auth');
 router.get('/', protect, authorize('ADMIN'), async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });
-    const nonLus = await Message.countDocuments({ lu: false });
+    const nonLus = messages.filter(m => !m.lu).length;
     
     res.status(200).json({
       success: true,
@@ -68,7 +71,7 @@ router.put('/:id', protect, authorize('ADMIN'), async (req, res) => {
     }
     
     message.lu = true;
-    await message.save();
+    await Message.findByIdAndUpdate(req.params.id, message);
     
     res.status(200).json({
       success: true,
@@ -96,7 +99,7 @@ router.delete('/:id', protect, authorize('ADMIN'), async (req, res) => {
       });
     }
     
-    await message.deleteOne();
+    await Message.findByIdAndDelete(req.params.id);
     
     res.status(200).json({
       success: true,

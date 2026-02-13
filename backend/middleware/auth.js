@@ -1,5 +1,8 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { createModel } = require('../database');
+
+// Use JSON DB for now
+const User = createModel('users');
 
 // Protect routes - verify JWT token
 exports.protect = async (req, res, next) => {
@@ -20,7 +23,7 @@ exports.protect = async (req, res, next) => {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'star-auto-secret-key-123456789012345678901234567890');
     
     // Get user from token
     req.user = await User.findById(decoded.id);

@@ -1,207 +1,159 @@
-# Star Auto - Site de Vente de Voitures
+# Star Auto - Django + Next.js Vercel Deployment
 
-Un site web complet de vente de voitures construit avec une stack MERN (MongoDB, Express, React, Node.js).
+This is a full-stack car dealership application with a Django backend and Next.js frontend, optimized for deployment to Vercel.
 
-## 🚀 Fonctionnalités
-
-- **Frontend moderne** avec React + Vite + Tailwind CSS
-- **Backend robuste** avec Node.js + Express + MongoDB
-- **Authentification sécurisée** avec JWT
-- **Gestion des rôles** (Admin / Client)
-- **Dashboard Admin** complet (CRUD voitures)
-- **Catalogue de véhicules** avec filtres et recherche
-- **Design responsive** et animations fluides
-
-## 📁 Structure du Projet
+## Project Structure
 
 ```
 star-auto/
-├── backend/
-│   ├── models/
-│   │   ├── User.js
-│   │   └── Car.js
-│   ├── routes/
-│   │   ├── auth.js
-│   │   └── cars.js
-│   ├── middleware/
-│   │   └── auth.js
-│   ├── server.js
-│   ├── seed.js
-│   ├── package.json
-│   └── .env.example
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── Footer.jsx
-│   │   │   └── CarCard.jsx
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx
-│   │   ├── pages/
-│   │   │   ├── Home.jsx
-│   │   │   ├── Cars.jsx
-│   │   │   ├── CarDetails.jsx
-│   │   │   ├── Login.jsx
-│   │   │   ├── Register.jsx
-│   │   │   └── AdminDashboard.jsx
-│   │   ├── services/
-│   │   │   └── api.js
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── tailwind.config.js
-│   ├── postcss.config.js
-│   └── package.json
-└── README.md
+├── backend/                 # Django REST API
+│   ├── api/                # Django app with models, views, serializers
+│   ├── starauto/           # Django project settings
+│   ├── manage.py
+│   ├── requirements.txt
+│   └── vercel.json         # Vercel config for backend
+│
+└── frontend/               # Next.js Frontend
+    ├── src/
+    │   ├── app/            # Next.js App Router pages
+    │   ├── components/     # React components
+    │   ├── context/        # Auth context
+    │   └── services/       # API service
+    ├── package.json
+    └── vercel.json         # Vercel config for frontend
 ```
 
-## 🛠️ Installation
+## Deployment to Vercel
 
-### Prérequis
+### Option 1: Two Separate Deployments (Recommended)
 
-- Node.js (v18 ou supérieur)
-- MongoDB (local ou cloud)
-- npm ou yarn
+Deploy both backend and frontend as separate Vercel projects:
 
-### 1. Cloner et installer les dépendances
+#### Backend (Django API)
 
-```bash
-# Installer les dépendances du backend
-cd backend
-npm install
+1. Create a new project on Vercel from Git
+2. Import the `backend/` directory
+3. Configure:
+   - Framework Preset: Python
+   - Build Command: Leave empty or use `pip install -r requirements.txt`
+   - Output Directory: Leave empty
+4. Add Environment Variables:
+   - `DJANGO_SECRET_KEY`: Generate a secure key
+   - `DEBUG`: `False`
+   - `PYTHONPATH`: `starauto`
+5. Deploy
 
-# Installer les dépendances du frontend
-cd ../frontend
-npm install
+#### Frontend (Next.js)
+
+1. Create a new project on Vercel from Git
+2. Import the `frontend/` directory
+3. Configure:
+   - Framework Preset: Next.js
+   - Build Command: `next build`
+   - Output Directory: `.next`
+4. Add Environment Variables:
+   - `NEXT_PUBLIC_API_URL`: Your Django API URL (e.g., `https://your-backend.vercel.app/api`)
+5. Deploy
+
+### Option 2: Monorepo Deployment
+
+If you want to deploy from a single repository:
+
+1. Create `vercel.json` in root:
+```json
+{
+  "projects": [
+    { "name": "star-auto-backend", "path": "backend" },
+    { "name": "star-auto-frontend", "path": "frontend" }
+  ]
+}
 ```
 
-### 2. Configuration de l'environnement
+2. Deploy each project separately on Vercel
 
-```bash
-# Backend
-cd backend
-cp .env.example .env
-# Éditer .env avec vos paramètres
+## Local Development
 
-# Frontend - pas besoin de configuration, API configurée via proxy Vite
-```
-
-### 3. Lancer MongoDB
-
-Assurez-vous que MongoDB est en cours d'exécution :
-```bash
-# Sur Windows (si installé localement)
-mongod
-
-# Ou utilisez MongoDB Atlas (cloud)
-```
-
-### 4. Initialiser la base de données (optionnel)
+### Backend (Django)
 
 ```bash
 cd backend
-npm run seed
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run migrations
+python manage.py migrate
+
+# Create superuser
+python manage.py createsuperuser
+
+# Seed data (optional)
+python manage.py seeddata
+
+# Run server
+python manage.py runserver
 ```
 
-Cela créera :
-- Un compte Admin : `admin@starauto.com` / `admin123`
-- Un compte Client : `client@starauto.com` / `client123`
-- 6 véhicules de démonstration
-
-### 5. Lancer l'application
+### Frontend (Next.js)
 
 ```bash
-# Terminal 1 - Backend
-cd backend
-npm run dev
-
-# Terminal 2 - Frontend
 cd frontend
+
+# Install dependencies
+npm install
+
+# Create environment file
+cp .env.example .env.local
+# Edit .env.local with your API URL
+
+# Run development server
 npm run dev
 ```
 
-L'application sera accessible à :
-- **Frontend** : http://localhost:5173
-- **Backend** : http://localhost:5000
+The frontend will be available at `http://localhost:3000`
 
-## 🔐 Comptes de Test
+## API Endpoints
 
-| Rôle   | Email                   | Mot de passe |
-|--------|-------------------------|--------------|
-| Admin  | admin@starauto.com      | admin123     |
-| Client | client@starauto.com     | client123    |
+### Authentication
+- `POST /api/auth/register/` - Register new user
+- `POST /api/auth/login/` - Login
+- `GET /api/auth/me/` - Get current user
+- `PUT /api/auth/profile/` - Update profile
+- `POST /api/auth/password/` - Change password
 
-## 📄 Pages
+### Cars
+- `GET /api/cars/` - List cars (with filters)
+- `GET /api/cars/{id}/` - Get car details
+- `POST /api/cars/` - Create car (admin only)
+- `PUT /api/cars/{id}/` - Update car (admin only)
+- `DELETE /api/cars/{id}/` - Delete car (admin only)
 
-### Client
-- **/** - Page d'accueil avec hero, statistiques, véhicules en vedette
-- **/cars** - Catalogue avec filtres (marque, prix, année)
-- **/cars/:id** - Détails d'un véhicule
-- **/login** - Connexion
-- **/register** - Inscription
+### Favorites
+- `GET /api/favorites/` - Get user favorites
+- `POST /api/favorites/{car_id}/` - Add to favorites
+- `DELETE /api/favorites/{car_id}/` - Remove from favorites
+
+### Messages
+- `POST /api/messages/` - Contact form
+- `GET /api/messages/` - Admin: list messages
 
 ### Admin
-- **/admin** - Dashboard avec statistiques et gestion des véhicules
-- CRUD complet (Créer, Modifier, Supprimer des véhicules)
+- `GET /api/admin/stats/` - Dashboard stats
+- `GET /api/admin/users/` - List users
+- `PUT /api/admin/users/{id}/` - Update user
 
-## 🎨 Design
+## Default Admin Credentials
 
-- **Couleurs principales** : Bleu foncé (#1e3a5f), Noir (#0a1628), Rouge (#e63946), Orange (#f77f00)
-- **Framework CSS** : Tailwind CSS
-- **Icônes** : SVG (via Heroicons)
-- **Police** : Inter
+After running `python manage.py seeddata`:
+- Email: `admin@starauto.com`
+- Password: `admin123`
 
-## 🔧 Technologies
+## Tech Stack
 
-### Frontend
-- React 18
-- Vite 5
-- Tailwind CSS 3.4
-- React Router DOM 6
-- Axios
-
-### Backend
-- Node.js
-- Express.js
-- MongoDB + Mongoose
-- JWT (JSON Web Token)
-- Bcryptjs
-
-## 📝 API Endpoints
-
-### Auth
-| Méthode | Endpoint         | Description           | Accès |
-|---------|------------------|-----------------------|-------|
-| POST    | /api/auth/register | Inscription          | Public |
-| POST    | /api/auth/login    | Connexion            | Public |
-| GET     | /api/auth/me       | Profil utilisateur   | Private |
-
-### Voitures
-| Méthode | Endpoint      | Description            | Accès |
-|---------|---------------|------------------------|-------|
-| GET     | /api/cars     | Liste des voitures     | Public |
-| GET     | /api/cars/:id | Détails d'une voiture  | Public |
-| POST    | /api/cars     | Créer une voiture      | Admin |
-| PUT     | /api/cars/:id | Modifier une voiture   | Admin |
-| DELETE  | /api/cars/:id | Supprimer une voiture  | Admin |
-
-## 🚀 Déploiement
-
-### Backend (Render, Heroku, etc.)
-1. Configurer les variables d'environnement
-2. Connecter à MongoDB Atlas
-3. Déployer
-
-### Frontend (Vercel, Netlify, etc.)
-1. Modifier `vite.config.js` pour pointer vers l'URL de production
-2. Déployer
-
-## 📄 Licence
-
-Ce projet est open source et disponible sous licence MIT.
-
----
-
-Créé avec ❤️ par Star Auto
+- **Backend**: Django 4.2, Django REST Framework, SimpleJWT
+- **Frontend**: Next.js 14, React 18, Tailwind CSS
+- **Deployment**: Vercel

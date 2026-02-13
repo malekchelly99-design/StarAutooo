@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
-const Car = require('../models/Car');
+const { createModel } = require('../database');
 const { protect, authorize } = require('../middleware/auth');
+
+// Use JSON DB for now
+const Car = createModel('cars');
 
 // @route   GET /api/cars
 // @desc    Get all cars
@@ -156,7 +159,7 @@ router.delete('/:id', protect, authorize('ADMIN'), async (req, res) => {
       });
     }
     
-    await car.deleteOne();
+    await Car.findByIdAndDelete(req.params.id);
     
     res.status(200).json({
       success: true,

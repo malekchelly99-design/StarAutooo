@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const Car = require('../models/Car');
+const { createModel } = require('../database');
+
+// Use JSON DB for now
+const Car = createModel('cars');
 
 // Car knowledge base for the chatbot
 const carKnowledge = {

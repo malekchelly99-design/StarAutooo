@@ -1,11 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
-const User = require('../models/User');
-const { protect } = require('../middleware/auth');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { createModel } = require('../database');
+
+// Use JSON DB for now (works without MongoDB)
+const User = createModel('users');
+
+// Generate JWT token
+const generateToken = (id, role) => {
+  return jwt.sign(
+    { id, role },
+    process.env.JWT_SECRET || 'star-auto-secret-key-123456789012345678901234567890',
+    { expiresIn: process.env.JWT_EXPIRE || '7d' }
+  );
+};
 
 // @route   POST /api/auth/register
-// @desc    Register a new user (CLIENT only)
+// @desc    Register a new user
 // @access  Public
 router.post('/register', [
   body('username').trim().notEmpty().withMessage('Username is required'),
@@ -24,25 +37,38 @@ router.post('/register', [
     const { username, email, password, telephone } = req.body;
 
     // Check if user exists
-    let user = await User.findOne({ $or: [{ email }, { username }] });
-    if (user) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User already exists'
+        message: 'User already exists with this email'
       });
     }
 
-    // Create user (default role: CLIENT)
-    user = await User.create({
+    // Check username
+    const existingUsername = await User.findOne({ username });
+    if (existingUsername) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username already taken'
+      });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = await User.create({
       username,
       email,
-      password,
+      password: hashedPassword,
       telephone,
       role: 'CLIENT'
     });
 
     // Generate token
-    const token = user.getSignedJwtToken();
+    const token = generateToken(user._id, user.role);
 
     res.status(201).json({
       success: true,
@@ -55,6 +81,7 @@ router.post('/register', [
       }
     });
   } catch (error) {
+    console.error('Register error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -81,7 +108,7 @@ router.post('/login', [
     const { email, password } = req.body;
 
     // Check for user
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -89,8 +116,17 @@ router.post('/login', [
       });
     }
 
-    // Check password
-    const isMatch = await user.matchPassword(password);
+    // Check password (handle both hashed and plain text for migration)
+    let isMatch = await bcrypt.compare(password, user.password);
+    
+    // If password doesn't match and it's plain text, update it
+    if (!isMatch && user.password === password) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      await User.findByIdAndUpdate(user._id, { password: hashedPassword });
+      isMatch = true;
+    }
+
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -99,18 +135,20 @@ router.post('/login', [
     }
 
     // Generate token
-    const token = user.getSignedJwtToken();
+    const token = generateToken(user._id, user.role);
 
     res.status(200).json({
       success: true,
       token,
       user: {
         id: user._id,
+        username: user.username,
         email: user.email,
         role: user.role
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -121,14 +159,44 @@ router.post('/login', [
 // @route   GET /api/auth/me
 // @desc    Get current logged in user
 // @access  Private
-router.get('/me', protect, async (req, res) => {
+router.get('/me', async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    res.status(200).json({
-      success: true,
-      user
-    });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized'
+      });
+    }
+
+    const token = authHeader.split(' ')[1];
+    
+    try {
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || 'star-auto-secret-key-123456789012345678901234567890'
+      );
+      
+      const user = await User.findById(decoded.id);
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        user
+      });
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
   } catch (error) {
+    console.error('Get me error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

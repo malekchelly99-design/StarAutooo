@@ -1,5 +1,8 @@
+'use client';
+
 import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { authAPI } from '@/services/api';
+import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext(null);
 
@@ -16,22 +19,31 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Configure axios defaults
-  axios.defaults.baseURL = '/api';
-  axios.defaults.headers.common['Content-Type'] = 'application/json';
-
   // Load user on mount
   useEffect(() => {
     const loadUser = async () => {
+      if (typeof window === 'undefined') {
+        setLoading(false);
+        return;
+      }
+      
       const token = localStorage.getItem('token');
       if (token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         try {
-          const res = await axios.get('/auth/me');
-          setUser(res.data.user);
+          // Check if token is expired
+          const decoded = jwtDecode(token);
+          const currentTime = Date.now() / 1000;
+          
+          if (decoded.exp < currentTime) {
+            localStorage.removeItem('token');
+            setLoading(false);
+            return;
+          }
+          
+          const res = await authAPI.me();
+          setUser(res.user);
         } catch (err) {
           localStorage.removeItem('token');
-          delete axios.defaults.headers.common['Authorization'];
         }
       }
       setLoading(false);
@@ -42,16 +54,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setError(null);
-      const res = await axios.post('/auth/login', { email, password });
-      const { token, user: userData } = res.data;
+      const res = await authAPI.login(email, password);
+      const { token, user: userData } = res;
       
       localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       
       return { success: true };
     } catch (err) {
-      const message = err.response?.data?.message || 'Login failed';
+      const message = err.response?.data?.message || 'Échec de la connexion';
       setError(message);
       return { success: false, error: message };
     }
@@ -60,24 +71,30 @@ export const AuthProvider = ({ children }) => {
   const register = async (username, email, password, telephone) => {
     try {
       setError(null);
-      const res = await axios.post('/auth/register', { username, email, password, telephone });
-      const { token, user: userData } = res.data;
+      const res = await authAPI.register({
+        username,
+        email,
+        password,
+        password_confirm: password,
+        telephone,
+      });
+      const { token, user: userData } = res;
       
       localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       
       return { success: true };
     } catch (err) {
-      const message = err.response?.data?.message || 'Registration failed';
+      const message = err.response?.data?.message || "Échec de l'inscription";
       setError(message);
       return { success: false, error: message };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
     setUser(null);
   };
 
@@ -93,7 +110,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAdmin,
     isClient,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   };
 
   return (
