@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useSearchParams } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { messageAPI, carAPI } from '@/services/api';
 
