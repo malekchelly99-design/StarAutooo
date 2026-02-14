@@ -1,1 +1,0 @@
-# Star Auto Django Project
