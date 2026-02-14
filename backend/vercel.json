@@ -3,18 +3,25 @@
     {
       "src": "starauto/wsgi.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "15mb", "runtime": "python3.9" }
+      "config": {
+        "maxLambdaSize": "15mb",
+        "runtime": "python3.11"
+      }
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
+      "dest": "starauto/wsgi.py"
+    },
+    {
+      "src": "/admin/(.*)",
       "dest": "starauto/wsgi.py"
     }
   ],
   "env": {
     "DJANGO_SECRET_KEY": "django-star-auto-secret-key-2024-very-secure",
     "DEBUG": "False",
-    "PYTHONPATH": "backend"
+    "PYTHONPATH": "."
   }
 }
