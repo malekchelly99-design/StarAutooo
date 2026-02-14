@@ -13,8 +13,8 @@
     }
   ],
   "env": {
-    "DJANGO_SECRET_KEY": "@django-secret-key",
+    "DJANGO_SECRET_KEY": "django-star-auto-secret-key-2024-very-secure",
     "DEBUG": "False",
-    "PYTHONPATH": "$PYTHONPATH:starauto"
+    "PYTHONPATH": "backend"
   }
 }
