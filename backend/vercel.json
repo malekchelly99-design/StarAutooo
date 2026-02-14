@@ -5,9 +5,7 @@
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "15mb",
-        "runtime": "python3.11",
-        "installCommand": "pip install -r requirements.txt",
-        "buildCommand": "python manage.py migrate --run-syncdb"
+        "runtime": "python3.11"
       }
     }
   ],
@@ -19,7 +17,7 @@
   ],
   "env": {
     "DJANGO_SECRET_KEY": "django-star-auto-secret-key-2024-very-secure",
-    "DEBUG": "False",
+    "DEBUG": "True",
     "PYTHONPATH": "."
   }
 }
