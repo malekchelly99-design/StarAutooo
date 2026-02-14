@@ -29,6 +29,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         window.location.href = '/login';
       }
     }
@@ -39,27 +40,12 @@ api.interceptors.response.use(
 // Auth APIs
 export const authAPI = {
   register: async (data) => {
-    const res = await api.post('/auth/register/', data);
+    const res = await api.post('/auth/register', data);
     return res.data;
   },
   
   login: async (email, password) => {
-    const res = await api.post('/auth/login/', { email, password });
-    return res.data;
-  },
-  
-  me: async () => {
-    const res = await api.get('/auth/me/');
-    return res.data;
-  },
-  
-  updateProfile: async (data) => {
-    const res = await api.put('/auth/profile/', data);
-    return res.data;
-  },
-  
-  changePassword: async (data) => {
-    const res = await api.post('/auth/password/', data);
+    const res = await api.post('/auth/login', { email, password });
     return res.data;
   },
 };
@@ -67,50 +53,45 @@ export const authAPI = {
 // Car APIs
 export const carAPI = {
   getAll: async (params = {}) => {
-    const res = await api.get('/cars/', { params });
+    const res = await api.get('/cars', { params });
     return res.data;
   },
   
   getById: async (id) => {
-    const res = await api.get(`/cars/${id}/`);
+    const res = await api.get(`/cars/${id}`);
     return res.data;
   },
   
   create: async (data) => {
-    const res = await api.post('/cars/', data);
+    const res = await api.post('/cars', data);
     return res.data;
   },
   
   update: async (id, data) => {
-    const res = await api.put(`/cars/${id}/`, data);
+    const res = await api.put(`/cars/${id}`, data);
     return res.data;
   },
   
   delete: async (id) => {
-    const res = await api.delete(`/cars/${id}/`);
+    const res = await api.delete(`/cars/${id}`);
     return res.data;
   },
 };
 
 // Favorite APIs
 export const favoriteAPI = {
-  getAll: async () => {
-    const res = await api.get('/favorites/');
+  getAll: async (userId) => {
+    const res = await api.get('/favorites', { params: { userId } });
     return res.data;
   },
   
-  add: async (carId) => {
-    const res = await api.post(`/favorites/${carId}/`);
+  add: async (userId, carId) => {
+    const res = await api.post('/favorites', { userId, carId });
     return res.data;
   },
   
-  remove: async (carId) => {
-    const res = await api.delete(`/favorites/${carId}/`);
-    return res.data;
-  },
-  
-  check: async (carId) => {
-    const res = await api.get(`/favorites/check/${carId}/`);
+  remove: async (userId, carId) => {
+    const res = await api.delete('/favorites', { params: { userId, carId } });
     return res.data;
   },
 };
@@ -118,45 +99,12 @@ export const favoriteAPI = {
 // Message APIs
 export const messageAPI = {
   getAll: async () => {
-    const res = await api.get('/messages/');
+    const res = await api.get('/messages');
     return res.data;
   },
   
   create: async (data) => {
-    const res = await api.post('/messages/', data);
-    return res.data;
-  },
-  
-  markRead: async (id) => {
-    const res = await api.put(`/messages/${id}/mark_read/`);
-    return res.data;
-  },
-  
-  delete: async (id) => {
-    const res = await api.delete(`/messages/${id}/`);
-    return res.data;
-  },
-};
-
-// Admin APIs
-export const adminAPI = {
-  getStats: async () => {
-    const res = await api.get('/admin/stats/');
-    return res.data;
-  },
-  
-  getUsers: async () => {
-    const res = await api.get('/admin/users/');
-    return res.data;
-  },
-  
-  updateUser: async (id, data) => {
-    const res = await api.put(`/admin/users/${id}/`, data);
-    return res.data;
-  },
-  
-  deleteUser: async (id) => {
-    const res = await api.delete(`/admin/users/${id}/`);
+    const res = await api.post('/messages', data);
     return res.data;
   },
 };

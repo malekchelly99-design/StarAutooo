@@ -1,0 +1,22 @@
+[
+  {
+    "id": "1",
+    "email": "admin@starauto.com",
+    "password": "admin123",
+    "nom": "Admin",
+    "prenom": "User",
+    "telephone": "+33 1 23 45 67 89",
+    "isAdmin": true,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "2",
+    "email": "user@example.com",
+    "password": "user123",
+    "nom": "Dupont",
+    "prenom": "Jean",
+    "telephone": "+33 6 12 34 56 78",
+    "isAdmin": false,
+    "createdAt": "2024-01-02T00:00:00.000Z"
+  }
+]
